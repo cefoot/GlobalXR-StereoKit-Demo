@@ -1,0 +1,47 @@
+#install template - only first time
+dotnet new install StereoKit.Templates
+#use template
+dotnet new sk-multi
+#start - optional
+dotnet run
+#build for android (quest)
+dotnet publish -c Release .\Projects\Android\{...}.csproj -o OUTPUT_Android
+####################HOLOLENS
+##For HoloLens :
+#copy overlay.zip (also has passthrough extension for Quest)
+#add lines to old csproj-files
+##Android:
+#		<Compile Remove="..\..\**\*.UWP.cs" />
+#		<Compile Remove="..\..\Platforms\UWP\**\*.cs" />
+#general:
+#		<Compile Remove="**\*.UWP.cs" />
+#		<Compile Remove="Platforms\UWP\**\*.cs" />
+#		<None Include="**\*.UWP.cs" />
+#		<None Include="Platforms\UWP\**\*.cs" />
+#build for uwp (HoloLens2)
+msbuild .\Projects\UWP\StereoKit_UWP.csproj /p:Platform=ARM64 /p:Configuration:Release /p:AppxBundle=Always /p:AppxBundlePlatforms="ARM64" /p:PackageCertificateKeyFile=..\..\Platforms\UWP\Certificate.pfx /p:AppxPackageDir=../../OUTPUT_Holo /restore
+######################PAssthrough on Quest
+#copy overlay.zip (also has passthrough extension for Quest) if not done 
+#AndroidManifest.xml => permission com.oculus.feature.PASSTHROUGH = true
+# code:
+//SKSettings add: blendPreference = DisplayBlend.AnyTransparent,
+		var passthrough = SK.GetOrCreateStepper<PassthroughMetaExt>();
+##SK initialize
+		if (passthrough != null)
+		{
+			passthrough.Enabled = true;
+		}
+
+
+
+####################make look nice (PBR)
+		Renderer.SkyTex = Tex.FromCubemapEquirectangular("20231103_104052_972.jpg");
+		Renderer.SkyTex.OnLoaded += t => Renderer.SkyLight = t.CubemapLighting;
+		var materialRed = new Material(Default.ShaderPbr);
+		materialRed.Transparency = Transparency.Blend;
+		materialRed[MatParamName.ColorTint] = Color.Hex(0xFF000088);
+		materialRed[MatParamName.MetallicAmount] = .9f;
+		materialRed[MatParamName.RoughnessAmount] = .1f;
+		
+
+		
